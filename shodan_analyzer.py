@@ -67,7 +67,21 @@ def get_open_ports(soup, args):
             print("*   " + i.contents[0])
 
 def get_info(soup):
-    print(soup.prettify())
+    #print(soup.prettify())
+    general_info = soup.find(id="general")
+
+    table = soup.find('table')
+    trs = table.find_all('tr')
+    
+    for tr in trs:
+        print("-----------")
+        for td in tr:
+            if isinstance(td, NavigableString):
+                pass 
+            else:
+                print(":")
+                print(td.text.strip())
+
 
 def add_params(parser):
     parser.add_argument(
