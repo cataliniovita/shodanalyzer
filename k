@@ -1,0 +1,17 @@
+21  
+tcp53  
+udp53  
+tcp80  
+tcp110  
+tcp143  
+tcp443  
+tcp465  
+tcp587  
+tcp993  
+tcp995  
+tcp2082  
+tcp2083  
+tcp2086  
+tcp2087  
+tcp3306  
+tcp

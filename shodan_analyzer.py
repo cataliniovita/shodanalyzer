@@ -70,6 +70,33 @@ def get_open_ports(soup, args):
 
     print(Style.RESET_ALL, end='')
 
+def get_open_ports_protocols(soup, args):
+    print(Fore.RED + "[*] Open Ports for " + args.ip + " are:")
+    print(Style.RESET_ALL, end='')
+
+    # Services on port
+    grid_title = soup.find_all("span")
+    grid_heading = soup.find_all("h6", {"class": "grid-heading"})
+    count = 0
+
+    for grid in grid_heading:
+        try:
+            print_grid = grid.find("span")
+            
+            # Print port number
+            strong = print_grid.find("strong").text.replace("  ", '')
+
+            # Print protocol type
+            if count >= 2:
+                rep_n = print_grid.contents[1].replace("\n", " ")
+                port_info = strong + rep_n.replace("/", " ")
+                print(port_info)
+
+        except:
+            pass
+
+        count += 1 
+
 def get_info(soup):
     print(Fore.RED + "[*] General Information")
     print(Style.RESET_ALL, end='')
@@ -93,10 +120,43 @@ def get_info(soup):
 
                 count += 1
 
-        print(Fore.GREEN + print_string)
+        print(print_string)
 
-    print(Style.RESET_ALL, end='')
     print("")
+
+def get_services(soup):
+    # Services on port
+    grid_title = soup.find_all("span")
+    grid_heading = soup.find_all("h6", {"class": "grid-heading"})
+    count = 0
+
+    for grid in grid_heading:
+        try:
+            print_grid = grid.find("span")
+            
+            # Print port number
+            strong = print_grid.find("strong").text.replace("  ", 'j')
+
+            # Print protocol type
+            if count >= 2:
+                rep_n = print_grid.contents[1].replace("\n", " ")
+                port_info = strong + rep_n.replace("/", " ")
+                print(port_info)
+
+        except:
+            pass
+
+        count += 1
+
+    #print(grid_title)
+
+#    for i in grid_title:
+#        print(i.text.strip())
+    # Services detailed
+    #padding_banner = soup.find_all("div", {"class": "card card-padding banner"})
+
+#    for i in padding_banner:
+#        print(i.text)
 
 def add_params(parser):
     parser.add_argument(
@@ -130,4 +190,6 @@ if __name__ == "__main__":
     # Grab open ports
     soup = login_session(args)
     get_info(soup)
-    get_open_ports(soup, args)
+    get_open_ports_protocols(soup, args)
+    #get_services(soup)
+
