@@ -1,5 +1,6 @@
 import requests
 import argparse
+from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup, NavigableString
 
 # Login with csrf token and create a session
@@ -58,30 +59,44 @@ def login_session(args):
 def get_open_ports(soup, args):
     # Find open ports list
     ports_list = soup.find(id="ports")
-    print("[*] Open Ports for " + args.ip + " are:")
+    print(Fore.RED + "[*] Open Ports for " + args.ip + " are:")
+    print(Style.RESET_ALL, end='')
 
     for i in ports_list:
         if isinstance(i, NavigableString):
             break
         else:
-            print("*   " + i.contents[0])
+            print(Fore.WHITE + ("*   " + i.contents[0]))
+
+    print(Style.RESET_ALL, end='')
 
 def get_info(soup):
+    print(Fore.RED + "[*] General Information")
+    print(Style.RESET_ALL, end='')
     #print(soup.prettify())
     general_info = soup.find(id="general")
 
     table = soup.find('table')
     trs = table.find_all('tr')
-    
+
     for tr in trs:
-        print("-----------")
+        count = 0
+        print_string = ""
         for td in tr:
             if isinstance(td, NavigableString):
                 pass 
             else:
-                print(":")
-                print(td.text.strip())
+                if count == 1:
+                    print_string += ": "
+                
+                print_string += td.text.strip()
 
+                count += 1
+
+        print(Fore.GREEN + print_string)
+
+    print(Style.RESET_ALL, end='')
+    print("")
 
 def add_params(parser):
     parser.add_argument(
@@ -114,5 +129,5 @@ if __name__ == "__main__":
 
     # Grab open ports
     soup = login_session(args)
-    #get_open_ports(soup, args)
     get_info(soup)
+    get_open_ports(soup, args)
