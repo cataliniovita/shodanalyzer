@@ -71,6 +71,8 @@ def get_open_ports(soup, args):
     print(Style.RESET_ALL, end='')
 
 def get_open_ports_protocols(soup, args):
+    ports_list = []
+
     print(Fore.RED + "[*] Open Ports for " + args.ip + " are:")
     print(Style.RESET_ALL, end='')
 
@@ -85,6 +87,7 @@ def get_open_ports_protocols(soup, args):
             
             # Print port number
             strong = print_grid.find("strong").text.replace("  ", '')
+            ports_list.append(strong)
 
             # Print protocol type
             if count >= 2:
@@ -96,6 +99,8 @@ def get_open_ports_protocols(soup, args):
             pass
 
         count += 1 
+
+    return ports_list
 
 def get_info(soup):
     print(Fore.RED + "[*] General Information")
@@ -124,39 +129,17 @@ def get_info(soup):
 
     print("")
 
-def get_services(soup):
+def get_services(soup, ports_list):
     # Services on port
     grid_title = soup.find_all("span")
-    grid_heading = soup.find_all("h6", {"class": "grid-heading"})
-    count = 0
 
-    for grid in grid_heading:
-        try:
-            print_grid = grid.find("span")
-            
-            # Print port number
-            strong = print_grid.find("strong").text.replace("  ", 'j')
-
-            # Print protocol type
-            if count >= 2:
-                rep_n = print_grid.contents[1].replace("\n", " ")
-                port_info = strong + rep_n.replace("/", " ")
-                print(port_info)
-
-        except:
-            pass
-
-        count += 1
-
-    #print(grid_title)
-
-#    for i in grid_title:
-#        print(i.text.strip())
     # Services detailed
-    #padding_banner = soup.find_all("div", {"class": "card card-padding banner"})
+    padding_banner = soup.find_all("div", {"class": "card card-padding banner"})
 
-#    for i in padding_banner:
-#        print(i.text)
+    #for i in padding_banner:
+    #    print(i.text, end='')
+
+    print(ports_list)
 
 def add_params(parser):
     parser.add_argument(
@@ -190,6 +173,5 @@ if __name__ == "__main__":
     # Grab open ports
     soup = login_session(args)
     get_info(soup)
-    get_open_ports_protocols(soup, args)
-    #get_services(soup)
-
+    ports_list = get_open_ports_protocols(soup, args)
+    get_services(soup, ports_list)
