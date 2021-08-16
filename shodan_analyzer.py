@@ -118,6 +118,12 @@ def get_open_ports_protocols(soup, args):
 
     return ports_list
 
+def alert_no_found(soup):
+    alert = soup.findAll("div", {"class": "alert alert-notice"}) 
+
+    for i in alert:
+        print(i.text)
+
 def get_info(soup):
     print(Fore.RED + "[*] General Information")
     print(Style.RESET_ALL, end='')
@@ -157,9 +163,9 @@ def get_services(soup, ports_list):
 
     no = 0
     for i in padding_banner:
-        print(Fore.RED + ports_list[no], end='')
+        print(Fore.RED + ports_list[no])
         print(Style.RESET_ALL, end='')
-        print(i.text, end='')
+        print(i.contents[1].text)
         no += 1
 
 def get_technologies(soup):
@@ -187,7 +193,13 @@ def get_technologies(soup):
             print(web, end='')
             if web != '':
                 print("")
+
+    print("")
         
+def get_cves(soup):
+    print(Fore.RED + "[*] CVEs found")
+    print(Style.RESET_ALL, end='')
+
 def add_params(parser):
     parser.add_argument(
             '-i',
@@ -224,8 +236,8 @@ if __name__ == "__main__":
 
     else:
         get_info(soup)
-        #print(soup.prettify())
         ports_list = get_open_ports_protocols(soup, args)
-        get_open_ports(soup, args)
-        get_services(soup, ports_list)
+        #get_open_ports(soup, args)
         get_technologies(soup)
+        get_services(soup, ports_list)
+        #alert_no_found(soup)
