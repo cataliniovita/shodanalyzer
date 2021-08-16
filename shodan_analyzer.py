@@ -3,6 +3,11 @@ import argparse
 from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup, NavigableString
 
+def error(element):
+    if element is None:
+        print("[-] You are temporarily banned from accessing account.shodan.io website")
+        return False
+
 # Login with csrf token and create a session
 def login_session(args):
     # Create a session
@@ -11,7 +16,16 @@ def login_session(args):
     # Get the csrf token
     csrf_req = requests.get('https://account.shodan.io/login')
     soup = BeautifulSoup(csrf_req.content, 'html.parser')
-    token = soup.find('input', {'name':'csrf_token'})['value']
+
+    if error(soup) == False:
+        return False
+
+    token = soup.find('input', {'name':'csrf_token'})
+    if error(token) == False:
+        return False
+
+    # Check if csrf token is available
+    access_token = token['value']
 
     # Grab the cookie session
     session_cookies = csrf_req.cookies
@@ -42,7 +56,7 @@ def login_session(args):
       'password': args.password,
       'grant_type': 'password',
       'continue': 'https://www.shodan.io/dashboard',
-      'csrf_token': token
+      'csrf_token': access_token
     }
 
     response = session_requests.post('https://account.shodan.io/login', headers=headers, data=data, cookies=cookies)
@@ -89,7 +103,7 @@ def get_open_ports_protocols(soup, args):
             strong = print_grid.find("strong").text.replace("  ", '')
 
             # Print protocol type
-            if count >= 2:
+            if count >= 1:
                 rep_n = print_grid.contents[1].replace("\n", " ")
                 port_info = strong + rep_n.replace("/", " ")
                 print(port_info)
@@ -99,6 +113,8 @@ def get_open_ports_protocols(soup, args):
             pass
 
         count += 1 
+
+    print("")
 
     return ports_list
 
@@ -132,6 +148,7 @@ def get_info(soup):
 def get_services(soup, ports_list):
     print(Fore.RED + "[*] Services")
     print(Style.RESET_ALL, end='')
+
     # Services on port
     grid_title = soup.find_all("span")
 
@@ -145,6 +162,32 @@ def get_services(soup, ports_list):
         print(i.text, end='')
         no += 1
 
+def get_technologies(soup):
+    print(Fore.RED + "[*] Web Technologies")
+    print(Style.RESET_ALL, end='')
+
+    web_techs = soup.findAll("ul", {"id": "http-components"})
+    tech_list = []
+    web_str = ''
+
+    if web_techs is None:
+        print("[-] No technologies found...")
+        return
+    else:
+        for tech in web_techs:
+            web_str = tech.text
+
+        if web_str == '':
+            print("[-] No technologies found")
+            return
+
+        web_str = web_str.split("\n")
+        
+        for web in web_str:
+            print(web, end='')
+            if web != '':
+                print("")
+        
 def add_params(parser):
     parser.add_argument(
             '-i',
@@ -174,8 +217,15 @@ if __name__ == "__main__":
     add_params(parser)
     args = parser.parse_args()
 
-    # Grab open ports
     soup = login_session(args)
-    get_info(soup)
-    ports_list = get_open_ports_protocols(soup, args)
-    get_services(soup, ports_list)
+
+    if soup == False:
+        print("[-] Error occured. Aborting")
+
+    else:
+        get_info(soup)
+        #print(soup.prettify())
+        ports_list = get_open_ports_protocols(soup, args)
+        get_open_ports(soup, args)
+        get_services(soup, ports_list)
+        get_technologies(soup)
