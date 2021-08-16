@@ -87,13 +87,13 @@ def get_open_ports_protocols(soup, args):
             
             # Print port number
             strong = print_grid.find("strong").text.replace("  ", '')
-            ports_list.append(strong)
 
             # Print protocol type
             if count >= 2:
                 rep_n = print_grid.contents[1].replace("\n", " ")
                 port_info = strong + rep_n.replace("/", " ")
                 print(port_info)
+                ports_list.append(port_info)
 
         except:
             pass
@@ -130,16 +130,20 @@ def get_info(soup):
     print("")
 
 def get_services(soup, ports_list):
+    print(Fore.RED + "[*] Services")
+    print(Style.RESET_ALL, end='')
     # Services on port
     grid_title = soup.find_all("span")
 
     # Services detailed
     padding_banner = soup.find_all("div", {"class": "card card-padding banner"})
 
-    #for i in padding_banner:
-    #    print(i.text, end='')
-
-    print(ports_list)
+    no = 0
+    for i in padding_banner:
+        print(Fore.RED + ports_list[no], end='')
+        print(Style.RESET_ALL, end='')
+        print(i.text, end='')
+        no += 1
 
 def add_params(parser):
     parser.add_argument(
