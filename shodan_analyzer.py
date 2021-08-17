@@ -73,7 +73,7 @@ def login_session(args):
 def get_open_ports(soup, args):
     # Find open ports list
     ports_list = soup.find(id="ports")
-    print(Fore.RED + "[*] Open Ports for " + args.ip + " are:")
+    print(Fore.RED + Back.GREEN + "[*] Open Ports for " + args.ip)
     print(Style.RESET_ALL, end='')
 
     for i in ports_list:
@@ -87,8 +87,8 @@ def get_open_ports(soup, args):
 def get_open_ports_protocols(soup, args):
     ports_list = []
 
-    print(Fore.RED + "[*] Open Ports for " + args.ip + " are:")
-    print(Style.RESET_ALL, end='')
+    print(Fore.RED + Back.YELLOW + "[*] Open Ports for " + args.ip, end='')
+    print(Style.RESET_ALL)
 
     # Services on port
     grid_title = soup.find_all("span")
@@ -125,9 +125,8 @@ def alert_no_found(soup):
         print(i.text)
 
 def get_info(soup):
-    print(Fore.RED + "[*] General Information")
-    print(Style.RESET_ALL, end='')
-    #print(soup.prettify())
+    print(Fore.RED + Back.YELLOW + "[*] General Information", end='')
+    print(Style.RESET_ALL)
     general_info = soup.find(id="general")
 
     table = soup.find('table')
@@ -152,8 +151,8 @@ def get_info(soup):
     print("")
 
 def get_services(soup, ports_list):
-    print(Fore.RED + "[*] Services")
-    print(Style.RESET_ALL, end='')
+    print(Fore.RED + Back.YELLOW + "[*] Services", end='')
+    print(Style.RESET_ALL)
 
     # Services on port
     grid_title = soup.find_all("span")
@@ -163,14 +162,16 @@ def get_services(soup, ports_list):
 
     no = 0
     for i in padding_banner:
-        print(Fore.RED + ports_list[no])
+        print(Fore.GREEN + ports_list[no])
         print(Style.RESET_ALL, end='')
         print(i.contents[1].text)
         no += 1
 
+    print("")
+
 def get_technologies(soup):
-    print(Fore.RED + "[*] Web Technologies")
-    print(Style.RESET_ALL, end='')
+    print(Fore.RED + Back.YELLOW + "[*] Web Technologies", end ='')
+    print(Style.RESET_ALL)
 
     web_techs = soup.findAll("ul", {"id": "http-components"})
     tech_list = []
@@ -185,6 +186,7 @@ def get_technologies(soup):
 
         if web_str == '':
             print("[-] No technologies found")
+            print("")
             return
 
         web_str = web_str.split("\n")
@@ -197,8 +199,41 @@ def get_technologies(soup):
     print("")
         
 def get_cves(soup):
-    print(Fore.RED + "[*] CVEs found")
-    print(Style.RESET_ALL, end='')
+    print(Fore.RED + Back.YELLOW + "[*] Vulnerabilities", end='')
+    print(Style.RESET_ALL)
+
+    vulns_str = ""
+    vulnerabilities = soup.findAll("table", {"class":"table", "id":"vulnerabilities"})
+
+    if vulnerabilities is None:
+        print("[-] No vulnerabilities found")
+        return
+
+    for vulns in vulnerabilities:
+        vulns_str = vulns.text
+
+    if vulns_str == "":
+        print("[-] No vulnerabilities found")
+        return
+
+    vulns_str = vulns_str.split("\n")
+
+    for v in vulns_str:
+        if v.startswith("CVE"):
+            print(Fore.RED + v, end='')
+            print(Style.RESET_ALL, end='')
+        else:
+            print(v, end='')
+
+        if v != '':
+            print("\n")
+
+def gather_info(soup, args):
+    get_info(soup)
+    ports_list = get_open_ports_protocols(soup, args)
+    get_technologies(soup)
+    get_services(soup, ports_list)
+    get_cves(soup)
 
 def add_params(parser):
     parser.add_argument(
@@ -229,15 +264,13 @@ if __name__ == "__main__":
     add_params(parser)
     args = parser.parse_args()
 
+    # Create a login session
     soup = login_session(args)
 
+    # Check for banned shodan page
     if soup == False:
         print("[-] Error occured. Aborting")
 
     else:
-        get_info(soup)
-        ports_list = get_open_ports_protocols(soup, args)
-        #get_open_ports(soup, args)
-        get_technologies(soup)
-        get_services(soup, ports_list)
+        gather_info(soup, args)
         #alert_no_found(soup)
