@@ -118,11 +118,13 @@ def get_open_ports_protocols(soup, args):
 
     return ports_list
 
-def alert_no_found(soup):
+def alert_found(soup):
     alert = soup.findAll("div", {"class": "alert alert-notice"}) 
 
-    for i in alert:
-        print(i.text)
+    if alert != []:
+        return True
+
+    return False
 
 def get_info(soup):
     print(Fore.RED + Back.YELLOW + "[*] General Information", end='')
@@ -220,7 +222,7 @@ def get_cves(soup):
 
     for v in vulns_str:
         if v.startswith("CVE"):
-            print(Fore.RED + v, end='')
+            print(Fore.RED +  v, end='')
             print(Style.RESET_ALL, end='')
         else:
             print(v, end='')
@@ -270,7 +272,7 @@ if __name__ == "__main__":
     # Check for banned shodan page
     if soup == False:
         print("[-] Error occured. Aborting")
-
+    elif alert_found(soup) == True:
+        print("[-] Can't find any information for " + args.ip)
     else:
         gather_info(soup, args)
-        #alert_no_found(soup)
