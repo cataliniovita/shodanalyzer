@@ -9,7 +9,8 @@ def error(element):
         return False
 
 def banner():
-    print("""
+    print(Fore.RED + 
+    """
           _               _                   _
          | |             | |                 | |
       ___| |__   ___   __| |_____ ____  _____| |_   _ _____ _____  ____
@@ -19,6 +20,7 @@ def banner():
                                                (____/
                                                 v0.1
     """)
+    print(Style.RESET_ALL, end='')
 
 # Login with csrf token and create a session
 def login_session(args):
