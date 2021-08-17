@@ -8,6 +8,17 @@ def error(element):
         print("[-] You are temporarily banned from accessing account.shodan.io website")
         return False
 
+def banner():
+    print("""
+         | |             | |                                  | |
+      ___| |__   ___   __| |_____ ____ _____ _____ ____  _____| |_   _ _____ _____  ____
+     /___|  _ \ / _ \ / _  (____ |  _ (_____(____ |  _ \(____ | | | | (___  | ___ |/ ___)
+    |___ | | | | |_| ( (_| / ___ | | | |    / ___ | | | / ___ | | |_| |/ __/| ____| |
+    (___/|_| |_|\___/ \____\_____|_| |_|    \_____|_| |_\_____|\_\__  (_____|_____|_|
+                                                                (____/
+                                                                 v0.1
+    """)
+
 # Login with csrf token and create a session
 def login_session(args):
     # Create a session
@@ -266,6 +277,7 @@ if __name__ == "__main__":
     add_params(parser)
     args = parser.parse_args()
 
+    banner()
     # Create a login session
     soup = login_session(args)
 
