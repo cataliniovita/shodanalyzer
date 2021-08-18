@@ -9,7 +9,7 @@ def error(element):
         return False
 
 def banner():
-    print(Fore.RED + 
+    print(Fore.WHITE + 
     """
           _               _                   _
          | |             | |                 | |
@@ -106,13 +106,18 @@ def get_open_ports_protocols(soup, args):
 
     # Services on port
     grid_title = soup.find_all("span")
+
+    if grid_title is None:
+        print("[-] No Open Ports found")
+        return
+
     grid_heading = soup.find_all("h6", {"class": "grid-heading"})
     count = 0
 
     for grid in grid_heading:
         try:
             print_grid = grid.find("span")
-            
+
             # Print port number
             strong = print_grid.find("strong").text.replace("  ", '')
 
@@ -146,6 +151,11 @@ def get_info(soup):
     general_info = soup.find(id="general")
 
     table = soup.find('table')
+
+    if table is None:
+        print("[-] No general information found\n")
+        return
+
     trs = table.find_all('tr')
 
     for tr in trs:
@@ -173,8 +183,15 @@ def get_services(soup, ports_list):
     # Services on port
     grid_title = soup.find_all("span")
 
+    if grid_title == []:
+        print("[-] No services found\n")
+
     # Services detailed
     padding_banner = soup.find_all("div", {"class": "card card-padding banner"})
+
+    if padding_banner == []:
+        print("[-] No services found\n")
+        return
 
     no = 0
     for i in padding_banner:
