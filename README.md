@@ -22,4 +22,4 @@ python3 shodanalyzer.py -i IP_ADDRESS -u USERNAME -p PASSWORD
 
 Shodanalyzer will take the data out of shodan results. 
 
-![runshodanalyzer](run_shodanalyzer.gif)
+![runshodanalyzer](run_shodanz.gif)
