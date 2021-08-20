@@ -25,9 +25,9 @@ Shodanalyzer will take the data out of shodan results.
    ![runshodanalyzer](run_shodanz.gif)
 
 There are five possible field extracted: 
-   **Open Ports**
-   **Possible Vulnerabilities**
-   **General Information**
-   **Services**
-   **Technologies**
+ + **Open Ports**   
+ + **Possible Vulnerabilities**
+ + **General Information**
+ + **Services**
+ + **Technologies**
    
