@@ -82,6 +82,20 @@ def login_session(args):
     response = session_requests.get('https://www.shodan.io/search', headers=headers, params=params)
     soup = BeautifulSoup(response.content, 'html.parser')
 
+    response = session_requests.get('https://account.shodan.io/', headers=headers, params=params)
+    account = BeautifulSoup(response.content, 'html.parser')
+
+    display_name = account.find_all('td')
+    logged_flag = 0
+
+    for name in display_name:
+        if name.text == "Display Name":
+            logged_flag = 1
+
+    if logged_flag == 0:
+        print(Fore.RED + "[-] You are not logged in. Try to use valid credentials\n")
+        print(Style.RESET_ALL, end='')
+
     return soup
 
 def get_open_ports(soup, args):
