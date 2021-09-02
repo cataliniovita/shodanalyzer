@@ -307,6 +307,7 @@ def check_common_ports(ports_list):
     print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
     print(Style.RESET_ALL)
 
+    flag = 0
     tcp_ports_file = open("tcp_ports", "r")
     udp_ports_file = open("udp_ports", "r")
     
@@ -319,14 +320,21 @@ def check_common_ports(ports_list):
         if port[1] == "tcp":
             # Generate alert, we have an uncommon port
             if port[0] not in tcp_ports_str.split(","):
-                print("[-] Uncommon port found on ", end='') 
+                print("Uncommon port found on ", end='') 
                 print(Fore.RED + port[0] + "/tcp", end='')
                 print(Style.RESET_ALL)
+                flag += 1
 
         elif port[1] == "udp":
             # Generate alert, we have an uncommon port
             if port[0] not in udp_ports_str.split(","):
-                print("[-] Uncommon port found on " + port[0] + "/udp")
+                print("Uncommon port found on ", end='') 
+                print(Fore.RED + port[0] + "/udp", end='')
+                print(Style.RESET_ALL)
+                flag += 1
+
+    if flag == 0:
+        print("[-] No uncommon opened ports found")
 
     print("")
 
