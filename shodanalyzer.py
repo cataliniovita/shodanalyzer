@@ -100,17 +100,16 @@ def login_session(args):
 
 def get_open_ports(soup, args):
     # Find open ports list
-    ports_list = soup.find(id="ports")
-    print(Fore.RED + Back.GREEN + "[*] Open Ports for " + args.ip)
-    print(Style.RESET_ALL, end='')
+    find_ports = soup.find(id="ports")
+    ports_list = []
 
-    for i in ports_list:
+    for i in find_ports:
         if isinstance(i, NavigableString):
             break
         else:
-            print(Fore.WHITE + ("*   " + i.contents[0]))
+            ports_list.append(i.contents[0])
 
-    print(Style.RESET_ALL, end='')
+    return ports_list
 
 def get_open_ports_protocols(soup, args):
     ports_list = []
@@ -278,6 +277,8 @@ def get_cves(soup):
 def gather_info(soup, args):
     get_info(soup)
     ports_list = get_open_ports_protocols(soup, args)
+    ports = get_open_ports(soup, args)
+    check_common_ports(ports_list)
     get_technologies(soup)
     get_services(soup, ports_list)
     get_cves(soup)
@@ -301,6 +302,33 @@ def add_params(parser):
             action="store",
             required=True,
             help="insert your shodan account password")
+
+def check_common_ports(ports_list):
+    print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
+    print(Style.RESET_ALL)
+
+    tcp_ports_file = open("tcp_ports", "r")
+    udp_ports_file = open("udp_ports", "r")
+    
+    tcp_ports_str = tcp_ports_file.read()
+    udp_ports_str = udp_ports_file.read()
+
+    for port in ports_list:
+        port = port.split("   ")
+
+        if port[1] == "tcp":
+            # Generate alert, we have an uncommon port
+            if port[0] not in tcp_ports_str.split(","):
+                print("[-] Uncommon port found on ", end='') 
+                print(Fore.RED + port[0] + "/tcp", end='')
+                print(Style.RESET_ALL)
+
+        elif port[1] == "udp":
+            # Generate alert, we have an uncommon port
+            if port[0] not in udp_ports_str.split(","):
+                print("[-] Uncommon port found on " + port[0] + "/udp")
+
+    print("")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
