@@ -34,4 +34,6 @@ There are five possible field extracted:
  + **General Information**
  + **Services**
  + **Technologies**
+
+Shodanalyzer also compares the open ports with a list of 1000 ports stored in ``tcp_ports`` and ``udp_ports`` files.
    
