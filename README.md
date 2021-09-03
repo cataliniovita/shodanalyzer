@@ -35,6 +35,10 @@ There are five possible field extracted:
  + **Services**
  + **Technologies**
 
+### API Rating
+
+Shodan.io will block you after consecutive ~10 requests if you're not using an account or valid credentials. So, for multiple IP searches, create an account on [account][account.shodan.io] platform. To execute a shodanalyzer search, substitute the ``USERNAME`` and ``PASSWORD`` parameters. 
+
 ### Uncommon ports
 
 Shodanalyzer also compares the open ports with a list of 1000 ports stored in ``tcp_ports`` and ``udp_ports`` files. Both files contains a top 1000 common ports on tcp and udp protocols.
