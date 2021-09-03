@@ -35,5 +35,7 @@ There are five possible field extracted:
  + **Services**
  + **Technologies**
 
-Shodanalyzer also compares the open ports with a list of 1000 ports stored in ``tcp_ports`` and ``udp_ports`` files.
+### Uncommon ports
+
+Shodanalyzer also compares the open ports with a list of 1000 ports stored in ``tcp_ports`` and ``udp_ports`` files. Both files contains a top 1000 common ports on tcp and udp protocols.
    
