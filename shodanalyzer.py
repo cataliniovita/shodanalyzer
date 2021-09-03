@@ -303,6 +303,15 @@ def add_params(parser):
             required=True,
             help="insert your shodan account password")
 
+def detect_honeypot():
+    print(Fore.RED + Back.YELLOW + "[*] Honeyscore", end ='')
+    print(Style.RESET_ALL)
+   
+    hpot = requests.get('https://honeyscore.shodan.io/')
+    soup = BeautifulSoup(hpot.content, 'html.parser')
+
+    print(soup) 
+
 def check_common_ports(ports_list):
     print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
     print(Style.RESET_ALL)
@@ -359,3 +368,4 @@ if __name__ == "__main__":
         print("[-] Can't find any information for " + args.ip)
     else:
         gather_info(soup, args)
+        detect_honeypot()
