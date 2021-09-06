@@ -34,6 +34,7 @@ There are five possible field extracted:
  + **General Information**
  + **Services**
  + **Technologies**
+ + **Honeyscore**
 
 ### API Rating
 
@@ -43,3 +44,6 @@ Shodan.io will block you after consecutive ~10 requests if you're not using an a
 
 Shodanalyzer also compares the open ports with a list of 1000 ports stored in ``tcp_ports`` and ``udp_ports`` files. Both files contains a top 1000 common ports on tcp and udp protocols.
    
+### Honeyscore
+
+Shodan have also a honeypot detector: [honeyscore](https://honeyscore.shodan.io/). We can track a possible honeypot IP using this API. The honeyscore will be ranked with a maximum of 1.0 score. So, a score bigger and equals than 0.5/1.0 will be detected as a honeypot. 
