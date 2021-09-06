@@ -25,7 +25,7 @@ python3 shodanalyzer.py -i IP_ADDRESS -u USERNAME -p PASSWORD
 
 Shodanalyzer will take the data out of shodan results. 
 
-   ![runshodanalyzer](shodanalyzer_rum.gif)
+   ![runshodanalyzer](shodanalyzer_run.gif)
 
 There are seven possible field extracted:
  + **Open Ports**  
