@@ -36,6 +36,8 @@ There are five possible field extracted:
  + **Technologies**
  + **Honeyscore**
 
+## Informations obtained
+
 ### API Rating
 
 Shodan.io will block you after consecutive ~10 requests if you're not using an account or valid credentials. So, for multiple IP searches, create an account on [shodan account](https://account.shodan.io/login) platform. To execute a shodanalyzer search, substitute the ``USERNAME`` and ``PASSWORD`` parameters. 
