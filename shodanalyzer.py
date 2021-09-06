@@ -1,4 +1,5 @@
 import requests
+import struct
 import argparse
 from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup, NavigableString
@@ -103,6 +104,10 @@ def get_open_ports(soup, args):
     find_ports = soup.find(id="ports")
     ports_list = []
 
+    if find_ports is None:
+        print("[-] No Open Ports found")
+        return
+
     for i in find_ports:
         if isinstance(i, NavigableString):
             break
@@ -146,7 +151,10 @@ def get_open_ports_protocols(soup, args):
 
         count += 1 
 
-    print("")
+    if ports_list == []:
+        print("[-] No Open Ports found\n")
+    else:
+        print("")
 
     return ports_list
 
@@ -252,14 +260,14 @@ def get_cves(soup):
     vulnerabilities = soup.findAll("table", {"class":"table", "id":"vulnerabilities"})
 
     if vulnerabilities is None:
-        print("[-] No vulnerabilities found")
+        print("[-] No vulnerabilities found\n")
         return
 
     for vulns in vulnerabilities:
         vulns_str = vulns.text
 
     if vulns_str == "":
-        print("[-] No vulnerabilities found")
+        print("[-] No vulnerabilities found\n")
         return
 
     vulns_str = vulns_str.split("\n")
@@ -274,14 +282,16 @@ def get_cves(soup):
         if v != '':
             print("\n")
 
+    print("")
+
 def gather_info(soup, args):
     get_info(soup)
     ports_list = get_open_ports_protocols(soup, args)
-    ports = get_open_ports(soup, args)
     check_common_ports(ports_list)
     get_technologies(soup)
     get_services(soup, ports_list)
     get_cves(soup)
+    detect_honeypot(args)
 
 def add_params(parser):
     parser.add_argument(
@@ -303,14 +313,42 @@ def add_params(parser):
             required=True,
             help="insert your shodan account password")
 
-def detect_honeypot():
-    print(Fore.RED + Back.YELLOW + "[*] Honeyscore", end ='')
+def detect_honeypot(args):
+    print(Fore.RED + Back.YELLOW + "[*] Honeypot", end ='')
     print(Style.RESET_ALL)
-   
-    hpot = requests.get('https://honeyscore.shodan.io/')
-    soup = BeautifulSoup(hpot.content, 'html.parser')
 
-    print(soup) 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Origin': 'https://honeyscore.shodan.io',
+        'Connection': 'keep-alive',
+        'Referer': 'https://honeyscore.shodan.io/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+        'TE': 'trailers',
+    }
+
+    params = (
+        ('key', 'Hgqwf9dHMIE157PNCeqVJc6TVvlyGKiP'),
+    )
+
+    ip_url = "https://api.shodan.io/labs/honeyscore/"
+    ip_url += args.ip
+
+    response = requests.get(ip_url, headers=headers, params=params)
+
+    if float(response.text) <= 0.5:
+        print("[+] ", end='')
+        print(Fore.GREEN + args.ip, end='')
+        print(Style.RESET_ALL, end='')
+        print(" has a " + response.text + "/1 honeyscore")
+    else:
+        print("[-] ", end='')
+        print(Fore.RED + args.ip, end='')
+        print(Style.RESET_ALL, end='')
+        print(" has a " + response.text + "/1 honeyscore")
 
 def check_common_ports(ports_list):
     print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
@@ -368,4 +406,3 @@ if __name__ == "__main__":
         print("[-] Can't find any information for " + args.ip)
     else:
         gather_info(soup, args)
-        detect_honeypot()
