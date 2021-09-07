@@ -80,9 +80,10 @@ def login_session(args):
         ('query', args.ip),
     )
 
+    # Create the search request
     response = session_requests.get('https://www.shodan.io/search', headers=headers, params=params)
     soup = BeautifulSoup(response.content, 'html.parser')
-
+    # Create the login session
     response = session_requests.get('https://account.shodan.io/', headers=headers, params=params)
     account = BeautifulSoup(response.content, 'html.parser')
 
@@ -93,6 +94,7 @@ def login_session(args):
         if name.text == "Display Name":
             logged_flag = 1
 
+    # No valid credentials found. The search will still be made
     if logged_flag == 0:
         print(Fore.RED + "[-] You are not logged in. Try to use valid credentials\n")
         print(Style.RESET_ALL, end='')
@@ -116,6 +118,7 @@ def get_open_ports(soup, args):
 
     return ports_list
 
+# Find ports with protocols
 def get_open_ports_protocols(soup, args):
     ports_list = []
 
@@ -158,6 +161,7 @@ def get_open_ports_protocols(soup, args):
 
     return ports_list
 
+# Alert found for possible banned session
 def alert_found(soup):
     alert = soup.findAll("div", {"class": "alert alert-notice"}) 
 
@@ -190,7 +194,6 @@ def get_info(soup):
                     print_string += ": "
                 
                 print_string += td.text.strip()
-
                 count += 1
 
         print(print_string)
@@ -257,6 +260,7 @@ def get_cves(soup):
     print(Style.RESET_ALL)
 
     vulns_str = ""
+    # Extract possible CVEs from shodan result
     vulnerabilities = soup.findAll("table", {"class":"table", "id":"vulnerabilities"})
 
     if vulnerabilities is None:
@@ -284,6 +288,54 @@ def get_cves(soup):
 
     print("")
 
+def detect_honeypot(args):
+    print(Fore.RED + Back.YELLOW + "[*] Honeypot", end ='')
+    print(Style.RESET_ALL)
+
+    # Take default header
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Origin': 'https://honeyscore.shodan.io',
+        'Connection': 'keep-alive',
+        'Referer': 'https://honeyscore.shodan.io/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+        'TE': 'trailers',
+    }
+
+    params = (
+        ('key', 'Hgqwf9dHMIE157PNCeqVJc6TVvlyGKiP'),
+    )
+
+    # Create url with command line IP address
+    ip_url = "https://api.shodan.io/labs/honeyscore/"
+    ip_url += args.ip
+
+    response = requests.get(ip_url, headers=headers, params=params)
+
+    # Honeyscore has a value lesser than 0.5 -> no honeypot present
+    if float(response.text) <= 0.5:
+        print("[+] ", end='')
+        print(Fore.GREEN + args.ip, end='')
+        print(Style.RESET_ALL, end='')
+        print(" is not a honeypot. It has a ", end='')
+        print(Fore.GREEN + response.text, end='')
+        print(Style.RESET_ALL, end='')
+        print("/1 honeyscore")
+    else:
+        print("[+] ", end='')
+        print(Fore.RED + args.ip, end='')
+        print(Style.RESET_ALL, end='')
+        print(" is a honeypot. It has a ", end='')
+        print(Fore.RED + response.text, end='')
+        print(Style.RESET_ALL, end='')
+        print("/1 honeyscore")
+
+
+# Main gather function
 def gather_info(soup, args):
     get_info(soup)
     ports_list = get_open_ports_protocols(soup, args)
@@ -293,6 +345,45 @@ def gather_info(soup, args):
     get_cves(soup)
     detect_honeypot(args)
 
+def check_common_ports(ports_list):
+    print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
+    print(Style.RESET_ALL)
+
+    flag = 0
+    tcp_ports_file = open("tcp_ports", "r")
+    udp_ports_file = open("udp_ports", "r")
+    
+    tcp_ports_str = tcp_ports_file.read()
+    udp_ports_str = udp_ports_file.read()
+
+    # Parse tcp and udp ports files
+    for port in ports_list:
+        port = port.split("   ")
+
+        if port[1] == "tcp":
+            # Generate alert, we have an uncommon port
+            if port[0] not in tcp_ports_str.split(","):
+                print("Uncommon port found on ", end='') 
+                print(Fore.RED + port[0] + "/tcp", end='')
+                print(Style.RESET_ALL)
+                # Flag just increment, then we have available ports
+                flag += 1
+
+        elif port[1] == "udp":
+            # Generate alert, we have an uncommon port
+            if port[0] not in udp_ports_str.split(","):
+                print("Uncommon port found on ", end='') 
+                print(Fore.RED + port[0] + "/udp", end='')
+                print(Style.RESET_ALL)
+                # Flag just increment, then we have available ports
+                flag += 1
+
+    if flag == 0:
+        print("[-] No uncommon opened ports found")
+
+    print("")
+
+# Basic parameters
 def add_params(parser):
     parser.add_argument(
             '-i',
@@ -312,78 +403,6 @@ def add_params(parser):
             action="store",
             required=True,
             help="insert your shodan account password")
-
-def detect_honeypot(args):
-    print(Fore.RED + Back.YELLOW + "[*] Honeypot", end ='')
-    print(Style.RESET_ALL)
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Origin': 'https://honeyscore.shodan.io',
-        'Connection': 'keep-alive',
-        'Referer': 'https://honeyscore.shodan.io/',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-site',
-        'TE': 'trailers',
-    }
-
-    params = (
-        ('key', 'Hgqwf9dHMIE157PNCeqVJc6TVvlyGKiP'),
-    )
-
-    ip_url = "https://api.shodan.io/labs/honeyscore/"
-    ip_url += args.ip
-
-    response = requests.get(ip_url, headers=headers, params=params)
-
-    if float(response.text) <= 0.5:
-        print("[+] ", end='')
-        print(Fore.GREEN + args.ip, end='')
-        print(Style.RESET_ALL, end='')
-        print(" has a " + response.text + "/1 honeyscore")
-    else:
-        print("[-] ", end='')
-        print(Fore.RED + args.ip, end='')
-        print(Style.RESET_ALL, end='')
-        print(" has a " + response.text + "/1 honeyscore")
-
-def check_common_ports(ports_list):
-    print(Fore.RED + Back.YELLOW + "[*] Uncommon open ports", end ='')
-    print(Style.RESET_ALL)
-
-    flag = 0
-    tcp_ports_file = open("tcp_ports", "r")
-    udp_ports_file = open("udp_ports", "r")
-    
-    tcp_ports_str = tcp_ports_file.read()
-    udp_ports_str = udp_ports_file.read()
-
-    for port in ports_list:
-        port = port.split("   ")
-
-        if port[1] == "tcp":
-            # Generate alert, we have an uncommon port
-            if port[0] not in tcp_ports_str.split(","):
-                print("Uncommon port found on ", end='') 
-                print(Fore.RED + port[0] + "/tcp", end='')
-                print(Style.RESET_ALL)
-                flag += 1
-
-        elif port[1] == "udp":
-            # Generate alert, we have an uncommon port
-            if port[0] not in udp_ports_str.split(","):
-                print("Uncommon port found on ", end='') 
-                print(Fore.RED + port[0] + "/udp", end='')
-                print(Style.RESET_ALL)
-                flag += 1
-
-    if flag == 0:
-        print("[-] No uncommon opened ports found")
-
-    print("")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
