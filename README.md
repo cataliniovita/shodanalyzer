@@ -57,3 +57,7 @@ Shodan have also a honeypot detector: [honeyscore](https://honeyscore.shodan.io/
 ## Web vulnerability scanner
 
 Shodanalyzer has an extra argument: domain. You can use ``-d`` argument to select a domain scan. Scanning this, will result in having a full CVE raport, with a risk score info.
+
+## Contact
+
+@cataiovita
