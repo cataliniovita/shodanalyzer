@@ -52,4 +52,8 @@ There are a lot of possible CVEs found into a Shodan scan of a specific IP addre
 
 ### Honeyscore
 
-Shodan have also a honeypot detector: [honeyscore](https://honeyscore.shodan.io/). We can track a possible honeypot IP using this API. The honeyscore will be ranked with a maximum of 1.0 score. So, a score bigger and equals than 0.5/1.0 will be detected as a honeypot. 
+Shodan have also a honeypot detector: [honeyscore](https://honeyscore.shodan.io/). We can track a possible honeypot IP using this API. The honeyscore will be ranked with a maximum of 1.0 score. So, a score bigger and equals than 0.5/1.0 will be detected as a honeypot.
+
+## Web vulnerability scanner
+
+Shodanalyzer has an extra argument: domain. You can use ``-d`` argument to select a domain scan. Scanning this, will result in having a full CVE raport, with a risk score info.
