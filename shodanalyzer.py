@@ -1,6 +1,8 @@
 import requests
 import struct
 import argparse
+import json
+import re
 from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup, NavigableString
 
@@ -383,26 +385,92 @@ def check_common_ports(ports_list):
 
     print("")
 
+def get_domain_vuln(args):
+    data = {
+          'tested_url': args.domain, 
+          'choosen_ip': 'any',
+          'dnsr': 'off',
+          'recheck': 'false'
+    }
+
+    response = requests.post('https://www.immuniweb.com/websec/api/v1/chsec/1451425590.html', data=data)
+    json_obj = json.loads(response.content)
+
+    # Cache flag
+    cached = 0
+
+    try:  
+        # Test cached
+        if json_obj["status"] == "test_cached":
+            data_url = {
+                  'id': json_obj["test_id"]
+            }
+
+            response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
+            resp_to_json = json.loads(response.content)
+            vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+
+            first_key = list(vulnerabilities.keys())[0]
+            vulnerabilities = vulnerabilities[str(first_key)]["BULETINS"]
+
+        # New test
+        elif json_obj["status"] ==  "test_started":
+            data_url = {
+                  'id': json_obj["job_id"]
+            }
+
+            response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
+            resp_to_json = json.loads(response.content)
+            vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+
+            first_key = list(vulnerabilities.keys())[0]
+            vulnerabilities = vulnerabilities[str(first_key)]["BULETINS"]
+        # Extract every element
+        for vuln in vulnerabilities.items():
+            # Tuple unpack
+            name, data_unpack = vuln
+            data_field = data_unpack["DATA"]
+            # Extract dictionaries
+            for elem in data_field:
+                print("Vulnerability type: " + elem["TITLE"])
+                for cve in elem["CVE"]:
+                    print("CVE-ID: " + cve)
+                print("CVSSv3.1_SCORE: " + elem["CVSSv3.1_SCORE"])
+                print("Risk: " + elem["RISK"])
+                print("Published data: " + elem["PUBLISHED"])
+                print("Remediation: " + elem["REMEDIATION"])
+                print(elem["DETAIL_TEXT"])
+                print("Info links: " + elem["LINKS"])
+                print(" ")
+    except:
+        print("[!] Error. Domain name resolved in an invalid IP address")
+
 # Basic parameters
 def add_params(parser):
     parser.add_argument(
             '-i',
             dest="ip",
             action="store",
-            required=True,
+            required=False,
             help="choose an ip address to scan")
     parser.add_argument(
             '-u',
             dest="user",
             action="store",
-            required=True,
+            required=False,
             help="insert your shodan account username")
     parser.add_argument(
             '-p',
             dest="password",
             action="store",
-            required=True,
+            required=False,
             help="insert your shodan account password")
+    parser.add_argument(
+            '-d',
+            dest="domain",
+            action="store",
+            required=False,
+            help="drop a domain for immuniweb scan")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -414,14 +482,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     banner()
-    print("[*] Starting scan for ip address " + args.ip + "..." + "\n")
-    # Create a login session
-    soup = login_session(args)
 
-    # Check for banned shodan page
-    if soup == False:
-        print("[-] Error occured. Aborting")
-    elif alert_found(soup) == True:
-        print("[-] Can't find any information for " + args.ip)
+    if args.domain is None:
+        if args.ip is None:
+            print("[!] Choose and ip address or a domain!")
+        else:
+            print("[*] Starting scan for ip address " + args.ip + "..." + "\n")
+            # Create a login session
+            soup = login_session(args)
+            # Check for banned shodan page
+            if soup == False:
+                print("[-] Error occured. Aborting")
+            elif alert_found(soup) == True:
+                print("[-] Can't find any information for " + args.ip)
+            else:
+                gather_info(soup, args)
     else:
-        gather_info(soup, args)
+        get_domain_vuln(args)
