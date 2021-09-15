@@ -11,6 +11,22 @@ def error(element):
         print("[-] You are temporarily banned from accessing account.shodan.io website")
         return False
 
+def usage():
+    print("""
+usage: shodanalyzer.py [-h] [-i IP] [-u USER] [-p PASSWORD] [-d DOMAIN]
+
+Shodan-Analyzer - scanner based on shodan.io
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -i IP        choose an ip address to scan
+  -u USER      insert your shodan account username
+  -p PASSWORD  insert your shodan account password
+  -d DOMAIN    drop a domain for immuniweb scan
+
+Shodan-Analyzer is a web-site scanner based on shodan
+    """)
+
 def banner():
     print(Fore.WHITE + 
     """
@@ -485,6 +501,7 @@ if __name__ == "__main__":
 
     if args.domain is None:
         if args.ip is None:
+            usage()
             print("[!] Choose and ip address or a domain!")
         else:
             print("[*] Starting scan for ip address " + args.ip + "..." + "\n")
