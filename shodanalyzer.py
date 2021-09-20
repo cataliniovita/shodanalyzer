@@ -402,8 +402,10 @@ def check_common_ports(ports_list):
     print("")
 
 def get_domain_vuln(args):
+    message = ""
+
     data = {
-          'tested_url': args.domain, 
+          'tested_url': args.domain,
           'choosen_ip': 'any',
           'dnsr': 'off',
           'recheck': 'false'
@@ -415,51 +417,96 @@ def get_domain_vuln(args):
     # Cache flag
     cached = 0
 
-    try:  
-        # Test cached
-        if json_obj["status"] == "test_cached":
-            data_url = {
-                  'id': json_obj["test_id"]
-            }
+    # Test cached
+    if json_obj["status"] == "test_cached":
+        data_url = {
+              'id': json_obj["test_id"]
+        }
 
+        response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
+        resp_to_json = json.loads(response.content)
+
+        vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+        http_headers = resp_to_json["http_headers"]
+
+        if vulnerabilities is None or vulnerabilities == "":
+            print("No CVE vulnerabilities found for this domain")
+
+        if http_headers is None or http_headers == "":
+            print("No HTTP headers vulnerabilities found")
+
+    # New test
+    elif json_obj["status"] ==  "test_started":
+        print("[*] Test started. We'll wait up to 10 minutes")
+        time.sleep(660)
+
+        data_url = {
+              'job_id': json_obj["job_id"]
+        }
+
+        print("JOB ID: " + json_obj["job_id"])
+        response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
+        resp_to_json = json.loads(response.content)
+
+        try:
+            test_response = resp_to_json["http_additional_info"]
+        except:
+            print("We need to wait more...")
+            time.sleep(600)
             response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
             resp_to_json = json.loads(response.content)
-            vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+            print(resp_to_json)
 
-            first_key = list(vulnerabilities.keys())[0]
-            vulnerabilities = vulnerabilities[str(first_key)]["BULETINS"]
+        try:
+            test_response = resp_to_json["http_additional_info"]
+        except:
+            print("Waited 21 minutes. No result...")
+            return ""
 
-        # New test
-        elif json_obj["status"] ==  "test_started":
-            data_url = {
-                  'id': json_obj["job_id"]
-            }
+        vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+        http_headers = resp_to_json["http_headers"]
 
-            response = requests.post('https://www.immuniweb.com/websec/api/v1/get_result/1451425590.html', data=data_url)
-            resp_to_json = json.loads(response.content)
-            vulnerabilities = resp_to_json["http_additional_info"]["app_scan"]["result"]["RESULT"]["VULNS"]
+        if vulnerabilities is None or vulnerabilities == "":
+            print("No CVE vulnerabilities found for this domain")
+        if http_headers is None or http_headers == "":
+            print("No HTTP headers vulnerabilities found")
+    # Extract every element from vulnerabilites CVES
+    if vulnerabilities != None and vulnerabilities != "":
+        first_key = []
+        first_key = list(vulnerabilities.keys())[0]
+        vulnerabilities = vulnerabilities[str(first_key)]["BULETINS"]
 
-            first_key = list(vulnerabilities.keys())[0]
-            vulnerabilities = vulnerabilities[str(first_key)]["BULETINS"]
-        # Extract every element
+        message += "Vulnerabilities found:" + "\n\n"
         for vuln in vulnerabilities.items():
             # Tuple unpack
             name, data_unpack = vuln
             data_field = data_unpack["DATA"]
             # Extract dictionaries
             for elem in data_field:
-                print("Vulnerability type: " + elem["TITLE"])
+                message += "Vulnerability type: " + elem["TITLE"] + "\n"
                 for cve in elem["CVE"]:
-                    print("CVE-ID: " + cve)
-                print("CVSSv3.1_SCORE: " + elem["CVSSv3.1_SCORE"])
-                print("Risk: " + elem["RISK"])
-                print("Published data: " + elem["PUBLISHED"])
-                print("Remediation: " + elem["REMEDIATION"])
-                print(elem["DETAIL_TEXT"])
-                print("Info links: " + elem["LINKS"])
-                print(" ")
-    except:
-        print("[!] Error. Domain name resolved in an invalid IP address")
+                    message += "CVE-ID: " + cve + "\n"
+                message += "CVSSv3.1_SCORE: " + elem["CVSSv3.1_SCORE"] + "\n"
+                message += "Risk: " + elem["RISK"] + "\n"
+                message += "Published data: " + elem["PUBLISHED"]  + "\n"
+                message += "Remediation: " + elem["REMEDIATION"]+ "\n"
+                message += elem["DETAIL_TEXT"] + "\n"
+                message += "Info links: " + elem["LINKS"]+ "\n"
+                message += "\n"
+
+    if http_headers != None and http_headers != "":
+        message_headers = ""
+        message_headers += "Missing required HTTP Headers:" + "\n\n"
+        for header in list(http_headers.items()):
+            if header[0] == "Strict-Transport-Security" or header[0] == "X-Frame-Options" or header[0] == "X-Content-Type-Options" or header[0] == "X-XSS-Protection":
+                message_headers += header[0] + "\n"
+                for info in list(header[1].items()):
+                    if isinstance(info[1], str):
+                        message_headers += "Risk and improvement: " + info[1] + "\n" + "\n"
+
+    message += message_headers
+
+    return message
 
 # Basic parameters
 def add_params(parser):
