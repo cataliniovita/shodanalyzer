@@ -60,6 +60,6 @@ Shodanalyzer has an extra argument: domain. You can use ``-d`` argument to selec
 
 ## Contact
 
-@cataiovita
+[@cataiovita](https://github.com/cataiovita/)
 
 [github blog](https://cataiovita.github.io/)
