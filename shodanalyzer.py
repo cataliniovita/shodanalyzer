@@ -3,6 +3,7 @@ import struct
 import argparse
 import json
 import re
+import time
 from colorama import Fore, Back, Style
 from bs4 import BeautifulSoup, NavigableString
 
@@ -417,6 +418,16 @@ def get_domain_vuln(args):
     # Cache flag
     cached = 0
 
+    try:
+        test_status = json_obj["status"] 
+    except:
+        print("[-] You have two concurrent running tests. Wait for it to be finished...")
+        time.sleep(600)
+
+        try:
+            another_test_status = json_obj["status"]
+        except:
+            return
     # Test cached
     if json_obj["status"] == "test_cached":
         data_url = {
@@ -562,4 +573,5 @@ if __name__ == "__main__":
             else:
                 gather_info(soup, args)
     else:
+        print("[*] Starting scan for domain " + args.domain + "..." + "\n")
         get_domain_vuln(args)
